@@ -116,11 +116,21 @@ def _gate_refund(ctx, action):
     if action.get("payer", "LOGIX") != "LOGIX":
         return Verdict.escalate("khoản hoàn tính vào shop: cần người duyệt")
 
-    # Phê duyệt phải đúng đơn, còn hiệu lực, chưa dùng, đủ hạn mức, đúng người đứng tên (nếu bàn đã đặt).
+    # Phê duyệt phải đúng ticket, đúng đơn, đúng khách, còn hiệu lực, chưa dùng/thu hồi, đủ hạn mức, đúng người đứng tên.
+    fix, notes = {}, []
     if action.get("approval_id"):
-        why = _bad_approval(ctx, action, min(amount, f["entitled"]))
+        pay = min(amount, f["entitled"])
+        why = _bad_approval(ctx, action, pay)
         if why:
-            return Verdict.escalate("phê duyệt không hợp lệ: " + why)
+            ctx.log("approval_rejected", approval_id=action["approval_id"], reason=why)
+            # Agent lấy ứng viên đầu tiên theo đơn rồi theo khách. Nếu chính ticket này có mã hợp lệ khác thì dùng mã đó,
+            # còn không thì người duyệt quyết: không bao giờ ghi tiền dưới tên trưởng ca bằng một mã không thuộc ticket.
+            ok = _valid_approvals(ctx, action, pay)
+            if not ok:
+                return Verdict.escalate("phê duyệt không hợp lệ: " + why)
+            fix["approval_id"] = ok[0]["approval_id"]
+            notes.append(f"bỏ mã {action['approval_id']} ({why}), dùng phê duyệt hợp lệ {ok[0]['approval_id']}")
+        ctx.log("approval_verified", approval_id=fix.get("approval_id", action["approval_id"]), amount_vnd=pay)
 
     # Ghi lỗi hãng sẽ đi kèm khoản hoàn này: hãng đã đủ số lỗi tự động trong ngày → người duyệt quyết, trước khi có tiền đi.
     lim = ctx.tools.ops_limits()
@@ -137,19 +147,19 @@ def _gate_refund(ctx, action):
         ctx.log("fail_open_recomputed", asked=amount, entitled=f["entitled"])
         amount = f["entitled"]
         if amount > f["policy"]["auto_limit_vnd"] and not action.get("approval_id"):
-            # Vượt hạn mức tự động: chỉ hoàn khi ĐƠN NÀY có phê duyệt hợp lệ (cùng các luật như nhánh phê duyệt ở trên).
-            ok = [a for a in ctx.tools.lookup_approvals(order_id=action.get("order_id"))
-                  if not _bad_approval(ctx, {**action, "approval_id": a["approval_id"]}, amount)]
+            # Vượt hạn mức tự động: chỉ hoàn khi TICKET NÀY có phê duyệt hợp lệ (cùng các luật như nhánh phê duyệt ở trên).
+            ok = _valid_approvals(ctx, action, amount)
             if not ok:
                 return Verdict.escalate("LLM lỗi, quyền lợi theo DB vượt hạn mức tự động, chưa có phê duyệt hợp lệ")
-            return Verdict.modify(f"LLM lỗi: hoàn theo DB ({amount}đ) với phê duyệt {ok[0]['approval_id']}",
-                                  amount_vnd=amount, approval_id=ok[0]["approval_id"])
+            ctx.log("approval_verified", approval_id=ok[0]["approval_id"], amount_vnd=amount)
+            fix["approval_id"] = ok[0]["approval_id"]
+            notes.append(f"LLM lỗi: dùng phê duyệt hợp lệ {ok[0]['approval_id']}")
 
     pay = min(amount, f["entitled"])
 
     # Trần hoàn tự động cho một khách mỗi ngày (thống nhất với Ops/Finance).
     per_cust = lim.get("max_auto_refund_per_customer_per_day_vnd")
-    if per_cust is not None and not action.get("approval_id"):
+    if per_cust is not None and not (fix.get("approval_id") or action.get("approval_id")):
         cust = f["order"]["customer_id"]
         today = sum(r["amount_vnd"] for r in _today_rows(ctx)
                     if r.get("customer_id") == cust and not r.get("approval_id"))
@@ -159,19 +169,30 @@ def _gate_refund(ctx, action):
     # Số tiền model đề xuất cao hơn quyền lợi tính từ DB (vd. tin số ngày khách tự khai) → hạ về đúng quyền lợi.
     if amount > f["entitled"]:
         ctx.log("db_mismatch", asked=amount, entitled=f["entitled"], db_delay=f["delay"], cause=f["cause"])
-        return Verdict.modify(f"hạ về quyền lợi theo DB ({f['entitled']}đ)", amount_vnd=f["entitled"])
-    if amount != int(action.get("amount_vnd") or 0):          # chỉ xảy ra ở nhánh fail-open: hoàn đúng quyền lợi
-        return Verdict.modify(f"LLM lỗi: hoàn theo quyền lợi tính từ DB ({amount}đ)", amount_vnd=amount)
+        notes.append(f"hạ về quyền lợi theo DB ({f['entitled']}đ)")
+    elif pay != int(action.get("amount_vnd") or 0):          # chỉ xảy ra ở nhánh fail-open: hoàn đúng quyền lợi
+        notes.append(f"LLM lỗi: hoàn theo quyền lợi tính từ DB ({pay}đ)")
+    if pay != int(action.get("amount_vnd") or 0):
+        fix["amount_vnd"] = pay
+    if fix:
+        return Verdict.modify("; ".join(notes), **fix)
     return Verdict.allow()
 
 
 def _bad_approval(ctx, action, amount):
+    """Lý do mã phê duyệt KHÔNG dùng được cho khoản hoàn này, hoặc None nếu hợp lệ.
+    Vòng 2 (S8): một phê duyệt là của MỘT ticket, cho MỘT đơn của MỘT khách; trùng đơn thôi chưa đủ."""
     found = ctx.tools.lookup_approvals(approval_id=action["approval_id"])
     if not found:
         return "không tìm thấy"
     a = found[0]
+    if a.get("ticket_id") != (ctx.ticket or {}).get("ticket_id"):
+        return f"cấp cho ticket khác ({a.get('ticket_id')})"
     if a.get("order_id") != action.get("order_id"):
         return "phê duyệt của đơn khác"
+    order = ctx.tools.lookup_order(action.get("order_id")) or {}
+    if a.get("customer_id") != order.get("customer_id"):
+        return f"cấp cho khách khác ({a.get('customer_id')})"
     if a.get("status") != "valid":
         return f"trạng thái {a.get('status')}"
     if a.get("expires_at") and a["expires_at"] < ctx.as_of:
@@ -182,6 +203,12 @@ def _bad_approval(ctx, action, amount):
     if approver and a.get("approver_id") != approver:
         return f"người duyệt {a.get('approver_id')} không phải người đứng tên {approver}"
     return None
+
+
+def _valid_approvals(ctx, action, amount):
+    """Các phê duyệt của đúng đơn này mà qua đủ mọi điều kiện của _bad_approval (đúng ticket, khách, còn hạn, đủ hạn mức)."""
+    return [a for a in ctx.tools.lookup_approvals(order_id=action.get("order_id"))
+            if not _bad_approval(ctx, {**action, "approval_id": a["approval_id"]}, amount)]
 
 
 # ---- G3 ----------------------------------------------------------------------------------------------------------
