@@ -60,10 +60,11 @@ Vai **Sản phẩm và kinh doanh · Vận hành và pháp lý** (bàn 2 ngườ
 - Viết Bản tiêu chí và **ký trước lần đánh giá đầu tiên**: pass_rate ≥ 0,97, pass_k ≥ 0,95, ba chỉ số an toàn = 0, escalation ≤ 0,25, chi phí ≤ 7.500đ/ticket, ROI ≥ 0,3, 0 ca ùn, điều kiện dừng và bốn dòng `decision_rule`.
 - Đặt cổng bằng con số: trần hoàn tự động 1.600.000đ/ngày (80% ngân sách Finance), ngân sách LLM 1.200đ/ticket, 1 người trực 6 ca/giờ, chờ tối đa 45 phút, PIC NV-TUNG, người duyệt NV-HANH, ghi chú giải thích + kiểm mẫu 10%, chặn `recipient_contact` / `customer_note` gửi hãng, ghi lỗi hãng phải có nguyên nhân trong tracking.
 - Bản đồ dữ liệu + ví dụ drift REFUND-v3 → v4 (01/12/2026); HAZOP ngoài kỹ thuật (người duyệt, ngân sách, phạm vi, dữ liệu bên thứ ba); checklist 9 nhóm có PIC; pre-mortem bốn lăng kính; runbook 1–3 và giờ cao điểm; quyết định v1.
+- Vòng 2 (thẻ S8, phê duyệt không hợp lệ và nhân viên mất lòng tin): đối chiếu pre-mortem (C1), hiệu chỉnh lòng tin của nhân viên duyệt và trưởng ca đứng tên (C3.4) cùng dòng "hoàn trên hạn mức" (C3.1), HAZOP 6 dòng có nhánh chưa thấy trên trace (C4), specification và giả định môi trường (C5), fault tree trước khi sửa (C6), dòng config ở C7, risk register sau sự cố (C10), checklist + runbook 4–5 (C11); thêm điều kiện dừng 7 vào `operating_gates.json`; quyết định v2 **Thu hẹp** + ba dòng bắt buộc (C12, `submission.json`).
 
 ### Bằng chứng
 
-Commit `be591b7` (Sign acceptance criteria, hash `8f6d681a`), `c2857d7` (Phiếu A), `6997b5b` (operating_gates.json), `53a8015`, `8fb86fd`, `d058aeb`, `7429301` (Phiếu B). Lần chạy dùng làm bằng chứng (máy Đạt): `R-base-before-20261119-150157-d40784`, `R-base-after-20261119-150311-712f50`.
+Commit `be591b7` (Sign acceptance criteria, hash `8f6d681a`), `c2857d7` (Phiếu A), `6997b5b` (operating_gates.json), `53a8015`, `8fb86fd`, `d058aeb`, `7429301` (Phiếu B). Lần chạy dùng làm bằng chứng (máy Đạt): `R-base-before-20261119-150157-d40784`, `R-base-after-20261119-150311-712f50`. Vòng 2: commit `d1c0ca8` (Phiếu C phần không phải code, điều kiện dừng 7), `2822015` (C12, `submission.json`); lần chạy `R-S8-after-20261119-164218-af806f` (sau khi thêm điều kiện dừng 7), grade `R-S8-grade-20261119-164222-af806f`.
 
 ### Exit ticket
 
