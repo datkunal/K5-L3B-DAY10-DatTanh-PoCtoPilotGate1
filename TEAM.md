@@ -45,7 +45,9 @@ Có dùng trợ lý AI (Claude Code) để đọc code, viết và chạy thử 
 
 ### Exit ticket
 
-*(bản nháp, Đạt tự sửa lời)* Học được: cổng tốt nằm ở lệnh ghi và đọc dữ liệu gốc (tracking, bảng phê duyệt), không đọc model hay lời khách, nên nó NGĂN được nhánh lỗi chứ không chỉ giảm; và một chỉ số theo dõi chỉ có ích khi nó khác nhau giữa ngày bình thường và ngày có sự cố. Còn chưa chắc: cổng tin hoàn toàn vào bảng `approvals` và tracking; nếu chính bảng sai từ nguồn (thu hồi bằng lời chưa cập nhật) thì cổng vẫn cho chi, và bộ thử hôm nay không đo được trường hợp đó.
+**Một điều học được:** trước hôm nay em nghĩ muốn agent an toàn thì phải sửa prompt hoặc đổi model. Làm xong thì thấy cách chắc nhất là đặt cổng ngay trước lệnh ghi và cho cổng đọc dữ liệu gốc (tracking, bảng phê duyệt), không nghe model hay lời khách. Thẻ S8 là ví dụ rõ: cổng vòng 1 chỉ so mã duyệt với đơn mà đã đỡ được hết gói sự cố; thêm so đúng ticket và đúng khách thì chặn được cả trường hợp mã còn hiệu lực nhưng cấp cho ticket cũ. Em cũng học được là một monitor chỉ có ích khi nó cho số khác nhau giữa ngày bình thường và ngày có sự cố; monitor đầu tiên em viết cho S8 không làm được việc đó, phải đổi mẫu số mới dùng được.
+
+**Một điều còn chưa chắc:** cổng của bàn tin hoàn toàn vào bảng `approvals` và tracking. Nếu chị trưởng ca thu hồi mã bằng lời mà chưa cập nhật bảng, hoặc điểm phát ghi sai nguyên nhân trễ, thì cổng vẫn cho tiền đi, và bộ thử hôm nay không đo được trường hợp này. Em chưa biết ngoài thực tế bảng đó được cập nhật nhanh và đúng tới mức nào, nên đây là thứ cần đo trong pilot thật.
 
 ## TranTuanAnh-2A202603909
 
