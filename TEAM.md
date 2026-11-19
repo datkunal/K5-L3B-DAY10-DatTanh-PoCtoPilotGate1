@@ -2,9 +2,9 @@
 
 ## Thông tin nhóm
 
-- Tên nhóm (`TenNhom`, không dấu, không khoảng trắng):
-- Lớp: `L3A` / `L3B`
-- Repo của bàn: `K5-<L3A|L3B>-DAY10-<TenNhom>-PoCtoPilotGate1`
+- Tên nhóm (`TenNhom`, không dấu, không khoảng trắng): DatTanh
+- Lớp: `L3B`
+- Repo của bàn: `K5-L3B-DAY10-DatTanh-PoCtoPilotGate1`
 - Thẻ sự cố đã bốc (S1–S8):
 
 ## Thành viên
@@ -13,8 +13,8 @@ Họ tên đầy đủ và MSSV của **mọi** thành viên; bàn 3 người th
 
 | STT | Họ và tên | MSSV | Vai | Trưởng nhóm |
 | --: | --------- | ---- | --- | :---------: |
-|   1 |           |      |     |             |
-|   2 |           |      |     |             |
+|   1 | Vũ Tuấn Đạt | 2A202603744 | Kỹ sư cổng | x |
+|   2 | Trần Tuấn Anh | 2A202603909 | Sản phẩm và kinh doanh · Vận hành và pháp lý |             |
 |   3 |           |      |     |             |
 |   4 |           |      |     |             |
 
