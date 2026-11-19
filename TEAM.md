@@ -67,4 +67,4 @@ Commit `be591b7` (Sign acceptance criteria, hash `8f6d681a`), `c2857d7` (Phiếu
 
 ### Exit ticket
 
-*(bản nháp, Tuấn Anh tự sửa lời)* Học được: một ngưỡng chỉ có nghĩa khi viết kèm hành động và ký **trước** khi nhìn số; và nhiều cổng không cần code: một con số do người có thẩm quyền đặt (trần tiền, số người trực) cũng chặn được thiệt hại. Còn chưa chắc: ngưỡng chi phí 7.500đ và ROI 0,3 dựa trên số mock; chưa biết chi phí đối soát và xử lý khiếu nại thật lớn cỡ nào để biết ngưỡng này có quá lỏng không.
+Học được: một ngưỡng chỉ có nghĩa khi viết kèm hành động và ký **trước** khi nhìn số; và nhiều cổng không cần code: một con số do người có thẩm quyền đặt (trần tiền, số người trực) cũng chặn được thiệt hại. Còn chưa chắc: ngưỡng chi phí 7.500đ và ROI 0,3 dựa trên số mock; chưa biết chi phí đối soát và xử lý khiếu nại thật lớn cỡ nào để biết ngưỡng này có quá lỏng không.
