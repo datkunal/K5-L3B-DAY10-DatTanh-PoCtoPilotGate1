@@ -51,14 +51,14 @@ Chạy **trước khi sửa bất cứ thứ gì**:
 python3 -m lab10.grade --incident Sx
 ```
 
-- Mã lần chạy grade: `__________` · base: `__________` · prepared: `__________`
-- Cổng vòng 1 đỡ được ô / con số nào (so cột base với cột prepared): …
-- Khối kinh doanh và vận hành còn dòng nào vượt trần: …
+- Mã lần chạy grade: `R-S8-grade-20261119-163451-1f6a32` · base: `R-S8-before-20261119-163453-1f6a32` · prepared: `R-S8-prepared-20261119-163453-1f6a32`
+- Cổng vòng 1 đỡ được ô / con số nào (so cột base với cột prepared): **cả gói nhìn thấy.** pass_rate 0,8654 → 1,0; pass_k 0,8654 → 1,0; hoàn sai 6.845.000đ → 0đ; lỗi hãng oan 35 → 0; lộ dữ liệu 0 → 0. G2 `_bad_approval` chuyển người cả 5 ticket dùng mã sai (`S8-01`, `S8-02`, `S8-03`, `S8-04`, `S8-06`), trần 300.000đ/khách chuyển người `S8-43`, `S8-44`. Tỉ lệ chuyển người 0 → 0,1346 (7/52). Không còn khoản nào dùng mã sai, và config vòng 1 đã có `decision_note`, kiểm mẫu 10%, NV-HANH, nên nhân viên về kiểm mẫu 10% (base: kiểm lại 100%, 36 ca ùn, chờ lâu nhất 216 phút, 11.225đ/ticket, ROI −2,45). **Bỏ sót:** G2 vòng 1 chỉ so `order_id`, chưa so `ticket_id` / `customer_id` của mã (C0 dòng 2: thử mã `valid` cùng đơn của ticket cũ thì vòng 1 cho tiền đi).
+- Khối kinh doanh và vận hành còn dòng nào vượt trần: ở **base** có: 36 ca ùn, chờ lâu nhất 216 phút, chi phí 11.225đ/ticket > làm tay 10.000đ, ROI −2,45. Ở **prepared**: cổng vòng 1 đã đưa số khoản dùng mã sai về 0 nên nhân viên về kiểm mẫu 10% (C0 dòng 1); hàng chờ chỉ còn 7 ca chuyển người/ngày. Ở **after** (grade `R-S8-grade-20261119-164222-af806f`): 0 ca ùn, chờ lâu nhất 5 phút, 2.952đ/ticket, ROI 2,39 (C9), **không còn dòng vượt trần**, 6/6 ô kiểm xanh, "Niềm tin của nhân viên duyệt: đạt".
 
 **Mở lại pre-mortem (Phiếu B mục B6), viết bằng bút khác màu.** Với thẻ S1, S3, S4, S5 đây là một phần của phần riêng theo thẻ.
 
 - Sự cố trên thẻ thuộc lăng kính nào (kỹ thuật, kinh doanh, con người và vận hành, pháp lý)? **Con người và vận hành** là chính (nhân viên CSKH kiểm tay 100%, hàng chờ ùn, chi phí vượt làm tay). Gốc của nó nằm ở **quyền hạn / pháp lý**: trưởng ca bị ghi đứng tên những khoản chị không duyệt, và người đứng tên phải giải trình.
-- Có nằm trong các lý do bàn đã viết không? **Có, một nửa.** Phiếu B mục B6, lăng kính Con người và vận hành, đã viết "nhân viên CSKH không tin trợ lý nên tự kiểm lại 100% quyết định, chi phí vượt làm tay". Lý do này cũng đã thành một dòng ở C10. Cổng vòng 1 vì thế đã có sẵn **ba điều kiện để nhân viên quay về kiểm mẫu**: `decision_note = true`, `review_sampling_pct = 10`, `approver_id = NV-HANH`, cộng G2 `_bad_approval` kiểm đúng đơn, trạng thái, hạn, hạn mức và người ký. Cột prepared trong report đọc như sau: ⟨số: dòng "Niềm tin của nhân viên duyệt", tỉ lệ kiểm lại, chờ lâu nhất, chi phí/ticket ở mốc prepared⟩. Phần bàn **không nghĩ tới**: "phê duyệt hợp lệ" phải gắn với **đúng ticket và đúng khách**, không chỉ đúng đơn. Bàn coi bảng `approvals` là danh sách "đơn nào đã được duyệt". Thực tế mỗi mã là chữ ký của chị Hạnh cho **một** yêu cầu cụ thể. Agent lại lấy mã đầu tiên tìm theo đơn, không có thì lấy theo khách.
+- Có nằm trong các lý do bàn đã viết không? **Có, một nửa.** Phiếu B mục B6, lăng kính Con người và vận hành, đã viết "nhân viên CSKH không tin trợ lý nên tự kiểm lại 100% quyết định, chi phí vượt làm tay". Lý do này cũng đã thành một dòng ở C10. Cổng vòng 1 vì thế đã có sẵn **ba điều kiện để nhân viên quay về kiểm mẫu**: `decision_note = true`, `review_sampling_pct = 10`, `approver_id = NV-HANH`, cộng G2 `_bad_approval` kiểm đúng đơn, trạng thái, hạn, hạn mức và người ký. Cột prepared trong report (`R-S8-prepared-20261119-163453-1f6a32`): pass_rate 1,0, hoàn sai 0đ (base 6.845.000đ), không còn khoản nào dùng mã sai, nên điều kiện thứ tư cũng đạt và nhân viên về kiểm mẫu 10% (base: kiểm 100%, 36 ca ùn). Nghĩa là pre-mortem vòng 1 **đã đỡ được cả gói nhìn thấy**. Phần bàn **không nghĩ tới**: "phê duyệt hợp lệ" phải gắn với **đúng ticket và đúng khách**, không chỉ đúng đơn. Bàn coi bảng `approvals` là danh sách "đơn nào đã được duyệt". Thực tế mỗi mã là chữ ký của chị Hạnh cho **một** yêu cầu cụ thể. Agent lại lấy mã đầu tiên tìm theo đơn, không có thì lấy theo khách.
 - Lý do còn thiếu, thêm bây giờ:
 
 | Lý do thất bại (viết ở thì quá khứ) | Lăng kính | Kiểm được bằng gì (trace / data / config nào) |
@@ -212,7 +212,7 @@ Cùng cách làm như C3.3. Mốc "tin quá mức" là trước kiểm toán, m�
 | **Tin quá mức** (trước kiểm toán) | nhân viên duyệt | Khoản bồi thường 228.000–240.000đ (`S8-01`, `S8-03`, `S8-04`) hiện ra là "đã có phê duyệt"; nhân viên cho qua, không mở bảng phê duyệt | `approval_id` trên dòng sổ cái của `issue_refund` (lấy từ sự kiện `approval_used`) → bảng kiểm toán ghi "người duyệt: NV-HANH" | **Biết:** trợ lý có ghi một mã duyệt. **Không biết:** trợ lý chỉ lấy mã đầu tiên theo đơn hoặc theo khách, không kiểm ticket, trạng thái, hạn, hạn mức |
 | **Tin quá mức** (trước kiểm toán) | trưởng ca đứng tên | Chị cấp mã theo từng ticket, nghĩ hệ thống chỉ dùng mã cho đúng ticket đó trong hạn mức chị ghi. Chị thu hồi A-2806 thì nghĩ mã đó hết tác dụng | `approvals[].ticket_id`, `max_vnd`, `expires_at`, `status` (A-2802 hết hạn 10/11, A-2803 tối đa 150.000đ, A-2806 `revoked`) | **Biết:** mình đã cấp và thu hồi mã nào. **Không biết:** ở base không có cổng nào đọc các trường đó trước khi tiền đi, nên mã đã chết hay mã của ticket khác vẫn được dùng dưới tên chị |
 | **Không tin** (sau kiểm toán) | nhân viên duyệt | Kiểm tay 100% quyết định của trợ lý, kể cả khoản phí ship 16.000–24.000đ (`S8-60` … `S8-99`) vốn dưới hạn mức và không dùng mã duyệt nào | `staff_behavior.recheck_auto_decisions_pct = 100`. Ở base quyết định không có ghi chú (`decision_note = false`) nên mỗi lần kiểm tính 1 ca thay vì 0,4 ca (`ops_facts.recheck_with_note_units`) | **Biết:** đã có khoản dùng mã sai. **Không biết:** lỗi chỉ nằm ở nhánh trên hạn mức (6 ticket > 200.000đ). Khoản nhỏ được tính từ tracking, không dùng mã nào. Trợ lý không nói vì sao nó quyết nên phải tra lại từ đầu |
-| **Không tin** (sau kiểm toán) | trưởng ca đứng tên | Phải giải trình những khoản không duyệt nên ra lệnh cả ca kiểm tay; hàng chờ hơn 40 ca, có ca chờ mấy tiếng | Report base: khối hàng chờ (ca chờ, chờ lâu nhất, ca ùn) và chi phí/ticket so với làm tay 10.000đ: ⟨số base⟩ | **Biết:** tên mình nằm trên bảng kiểm toán. **Không biết:** hệ thống lấy mã duyệt kiểu gì, và cần điều kiện nào để được thôi kiểm tay |
+| **Không tin** (sau kiểm toán) | trưởng ca đứng tên | Phải giải trình những khoản không duyệt nên ra lệnh cả ca kiểm tay; hàng chờ hơn 40 ca, có ca chờ mấy tiếng | Report base `R-S8-before-20261119-163453-1f6a32`: kiểm lại 100%, 36 ca ùn, chờ lâu nhất 216 phút, 11.225đ/ticket > làm tay 10.000đ, ROI −2,45 | **Biết:** tên mình nằm trên bảng kiểm toán. **Không biết:** hệ thống lấy mã duyệt kiểu gì, và cần điều kiện nào để được thôi kiểm tay |
 | **Tin vừa đủ** (trạng thái muốn tới) | cả hai | Khoản trên hạn mức chỉ đi khi mã qua đủ 7 điều kiện, sai một điều kiện thì về tay chị Hạnh. Mỗi quyết định có ghi chú. Nhân viên kiểm mẫu 10%, trong ngày không còn khoản nào dùng mã không hợp lệ | Ghi chú quyết định (`decision_note = true`); sự kiện `approval_verified` / `approval_rejected` trên trace; monitor `approval_unverified_rate = 0`; dòng "Niềm tin của nhân viên duyệt: đạt" trong report | **Biết:** mỗi khoản dưới tên chị đã được đối chiếu với mã nào, của ticket nào, còn hạn tới ngày nào, hạn mức bao nhiêu; chị vẫn là người cấp, thu hồi mã và duyệt mọi khoản không có mã hợp lệ |
 
 **Rút ra:**
@@ -272,7 +272,7 @@ Vì sao có thể sai: (1) Ngoài đời người duyệt hay duyệt qua chat h
 
 <a id="c6"></a>
 
-## C6 · Câu 3.4 · Fault tree TRƯỚC khi sửa (mã lần chạy: ⟨mã mốc base / prepared của gói S8 trong grade `R-S8-grade-20261119-163759-80a8d1`⟩)
+## C6 · Câu 3.4 · Fault tree TRƯỚC khi sửa (mã lần chạy: base `R-S8-before-20261119-163453-1f6a32`, prepared `R-S8-prepared-20261119-163453-1f6a32`)
 
 **Khung tư duy.** Đi từ **tác hại** ngược về nguyên nhân, không đi từ lỗi mình tình cờ thấy. Mỗi tầng hỏi "điều gì phải xảy
 ra thì điều trên mới xảy ra", nối bằng **HOẶC** (một trong các nhánh là đủ) hoặc **VÀ** (phải đồng thời). Một biện pháp tốt
@@ -309,7 +309,8 @@ thường biến một nhánh HOẶC thành VÀ: tác hại chỉ còn xảy ra 
  │          vì: base review_sampling_pct = 0, approver_id = ""; trust_conditions đòi 10% và NV-HANH
  │          bằng chứng: report base, dòng "Niềm tin của nhân viên duyệt: chưa đạt" và các lý do
  ├─ [4] (cổng VÀ của [A]) 1 người trực × 6 ca/giờ cho ~52 ticket/ngày; kiểm 100% ≈ 50 ca ≈ 8 giờ   tầng: vận hành / kinh doanh
- │      bằng chứng: report base: ⟨ca chờ/ngày, chờ lâu nhất, ca ùn, chi phí/ticket, ROI⟩
+ │      bằng chứng: report base R-S8-before-20261119-163453-1f6a32: kiểm lại 100%, 36 ca ùn, chờ lâu nhất 216 phút,
+│                  11.225đ/ticket > 10.000đ làm tay, ROI −2,45; S8-44@11 queue_wait_min 81.0, queue_stuck True
  └─ [5] Khách tách một yêu cầu lớn thành nhiều khoản nhỏ dưới hạn mức, tiền đi không cần người duyệt   tầng: kinh doanh
         vì: hạn mức 200.000đ chỉ xét từng khoản, không xét tổng theo khách trong ngày
         bằng chứng: loạt S8-40 … S8-44@11 (C-16: 86.000 + 94.000 + 102.000 + 104.000 + 112.000đ)
@@ -444,10 +445,10 @@ Ghi các dòng đổi sau sự cố. Mỗi dòng vẫn phải có một PIC có 
 
 | # nhóm | Trạng thái mới (Xong / Chưa / Không áp dụng) | Bằng chứng mới (mã lần chạy, mục phiếu, số trong report) | PIC |
 |---|---|---|---|
-| 1 Chất lượng | ⟨Xong / Chưa theo số⟩ | Gói S8 after `R-S8-after-20261119-163759-80a8d1`, bộ nền after `R-base-after-20261119-163759-80a8d1` (không regression), grade `R-S8-grade-20261119-163759-80a8d1`: ⟨pass_rate, pass_k, 3 chỉ số an toàn⟩ | Vũ Tuấn Đạt |
+| 1 Chất lượng | Xong | Gói S8 after `R-S8-after-20261119-163759-80a8d1`, bộ nền after `R-base-after-20261119-163759-80a8d1` (không regression), grade `R-S8-grade-20261119-164222-af806f`: pass_rate 1,0 [1,0; 1,0], pass_k 1,0, hoàn sai 0đ · lỗi oan 0 · lộ dữ liệu 0 trên cả gói S8 và bộ nền | Vũ Tuấn Đạt |
 | 4 Quyền hạn | Xong | Phê duyệt chỉ hợp lệ khi đúng **ticket**, đơn, **khách**, `valid`, còn hạn, đủ hạn mức, NV-HANH ký (G2 `_bad_approval`, commit `4700bde`); C3.1 dòng "trên hạn mức"; C3.4 | Lê Thanh Tùng (NV-TUNG) |
 | 7 Vận hành | Xong | Điều kiện dừng 7 trong `operations.stop_conditions` (vòng 2); monitor `approval_unverified_rate`, `approval_rejected_rate`; runbook 4–5 ở dưới | Lê Thanh Tùng (NV-TUNG) |
-| 8 Con người, pháp lý | ⟨Xong nếu report ghi "Niềm tin: đạt"⟩ | Đủ 4 điều kiện tin của `staff_behavior`: `decision_note = true`, `review_sampling_pct = 10`, `approver_id = NV-HANH`, 0 khoản dùng mã không hợp lệ; report grade dòng "Niềm tin của nhân viên duyệt": ⟨đạt / tỉ lệ kiểm lại⟩ | Trần Thị Hạnh (NV-HANH) |
+| 8 Con người, pháp lý | Xong | Đủ 4 điều kiện tin của `staff_behavior`: `decision_note = true`, `review_sampling_pct = 10`, `approver_id = NV-HANH`, 0 khoản dùng mã không hợp lệ; report grade `R-S8-grade-20261119-164222-af806f` dòng "Niềm tin của nhân viên duyệt": **đạt** (base: kiểm lại 100%) | Trần Thị Hạnh (NV-HANH) |
 | 9 Quyết định | Xong | Quyết định v2 ở C12; tiêu chí `8f6d681a` và bản chốt vòng 1 `d70e9bc2` không đổi | Trần Tuấn Anh |
 
 ### Runbook 4 · Sau sự cố trên thẻ (vòng 2)
@@ -482,28 +483,30 @@ Cột v1 nằm ở Phiếu B mục B8; không sửa cột đó.
 |---|---|
 | Commit ký tiêu chí | phải giống v1 |
 | Hash chốt cổng vòng 1 | phải giống v1 |
-| Mã lần chạy dùng làm bằng chứng | thẻ, mốc base: ________ · prepared: ________ · after: ________ |
-| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | |
-| Kho hoặc hãng có số xấu nhất: ____. Nếu chỉ nhìn phân khúc này, quyết định có đổi không? *(Khối "theo kho và hãng" trong output `lab10.eval` / `lab10.grade`, hoặc mục `by_segment` trong `report.json`.)* | |
-| Quyết định (khoanh một) | Tiếp tục · Thu hẹp · Cải tiến thêm · Dừng |
-| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | |
-| Bằng chứng 2 | |
-| Bằng chứng 3 | |
-| Khớp dòng nào trong `decision_rule` đã ký? | |
-| Nếu Thu hẹp: cắt kho nào / còn bao nhiêu phần trăm / mấy người trực, và ticket bị cắt đi đâu | |
-| Nếu Cải tiến thêm: giả thuyết cụ thể (nhánh nào của fault tree) + hạn | |
-| Nếu Dừng: bài học ghi lại | |
-| Ngày quyết định lại (trừ khi Dừng) | |
-| PIC ký | |
+| Commit ký tiêu chí | `be591b7` (hash tiêu chí `8f6d681a`, giống v1; grade `R-S8-grade-20261119-164222-af806f` báo tiêu chí không đổi) |
+| Hash chốt cổng vòng 1 | `d70e9bc2` (giống v1) |
+| Mã lần chạy dùng làm bằng chứng | thẻ S8 (bản nộp `af806f`), mốc base: `R-S8-before-20261119-164224-af806f` · prepared: `R-S8-prepared-20261119-164224-af806f` · after: `R-S8-after-20261119-164224-af806f` (grade `R-S8-grade-20261119-164222-af806f`); bộ nền after: `R-base-after-20261119-164222-af806f` |
+| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | **Gói S8 after: không**: grade 6/6 ô kiểm xanh, "Niềm tin của nhân viên duyệt: đạt" (base có 36 ca ùn, chờ 216 phút, 11.225đ/ticket, ROI −2,45). **Bộ nền:** report không có dòng vượt trần, nhưng khối "theo kho và hãng" vẫn có **kho `?`** (ticket không tra được đơn) tốn **10.359đ/ticket > làm tay 10.000đ** (B8) |
+| Kho hoặc hãng có số xấu nhất: **kho `?` trên bộ nền** (ticket không tra được đơn); trên gói S8 là **kho DN** ở base (theo `world_patch.json`, 4/5 ticket dùng mã sai thuộc DN: `S8-01`, `S8-02`, `S8-03`, `S8-06`). Nếu chỉ nhìn phân khúc này, quyết định có đổi không? *(Khối "theo kho và hãng" trong output `lab10.eval` / `lab10.grade`, hoặc mục `by_segment` trong `report.json`.)* | Kho DN: **không đổi**. Lỗi nằm ở cách lấy mã duyệt, không ở kho; sau cổng mọi ticket DN dùng mã sai đều chuyển NV-HANH, không cần cắt DN. Kho `?`: **có**, vẫn là phần bị cắt như v1 |
+| Quyết định (khoanh một) | Tiếp tục · **Thu hẹp ✔** · Cải tiến thêm · Dừng |
+| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | Gói S8 after `R-S8-after-20261119-164224-af806f`: pass_rate 1,0 [1,0; 1,0] ≥ 0,97, pass_k 1,0 ≥ 0,95, hoàn sai 0đ, lỗi hãng oan 0, lộ dữ liệu 0 → **cả 5 ngưỡng bắt buộc đạt trên gói sự cố** (base 0,8654 · 6.845.000đ · 35 lỗi oan) |
+| Bằng chứng 2 | Bộ nền after `R-base-after-20261119-164222-af806f`: pass_rate 1,0, pass_k 1,0, 0 · 0 · 0, chuyển người 0,2273 ≤ 0,25 → **không regression** (T-008 vẫn hoàn bằng A-0008 đúng ticket). Tỉ lệ chuyển người trên S8 0,1346 ≤ 0,25 |
+| Bằng chứng 3 | Kinh doanh / vận hành: S8 after "Niềm tin của nhân viên duyệt: đạt", nhân viên kiểm mẫu 10% thay vì 100%, 0 ca ùn, chờ lâu nhất 5 phút, **2.952đ/ticket ≤ 7.500đ, ROI 2,39 ≥ 0,3** (base 11.225đ, ROI −2,45; grade `R-S8-grade-20261119-164222-af806f`, 6/6 ô xanh). Bộ nền (B8, `R-base-after-20261119-150311-712f50`): 4.456đ/ticket ≤ 7.500đ, ROI 1,24 ≥ 0,3, 0 ca ùn. **Nhưng** kho `?` 10.359đ/ticket > làm tay |
+| Khớp dòng nào trong `decision_rule` đã ký? | **"Thu hẹp"**: ba chỉ số an toàn bằng 0 trên cả bộ nền và gói S8, nhưng **một phân khúc vượt trần chi phí** (kho `?` > 10.000đ/ticket). Chưa khớp "Tiếp tục" trọn vẹn vì phân khúc đó chỉ đạt khi đã cắt khỏi phạm vi, tức là chính quyết định Thu hẹp |
+| Nếu Thu hẹp: cắt kho nào / còn bao nhiêu phần trăm / mấy người trực, và ticket bị cắt đi đâu | **Giữ như v1:** cắt **ticket không tra được đơn** (kho `?`), chuyển thẳng CSKH làm tay ngay khi tiếp nhận; giữ 4 kho bán lẻ HN, HCM, DN, CT (`pilot_scope: all`); **1 người trực** (NV-HANH, 6 ca/giờ); không mở HCM-B2B. **Thêm sau S8:** khoản > 200.000đ chỉ tự động khi mã duyệt qua đủ 7 điều kiện (đúng ticket, đơn, khách, `valid`, còn hạn, đủ hạn mức, NV-HANH ký), còn lại về NV-HANH; điều kiện dừng 7 trong `operating_gates.json` |
+| Nếu Cải tiến thêm: giả thuyết cụ thể (nhánh nào của fault tree) + hạn | (không áp dụng: không còn chỉ số an toàn nào > 0) |
+| Nếu Dừng: bài học ghi lại | (không áp dụng) |
+| Ngày quyết định lại (trừ khi Dừng) | **2026-11-30**, trước khi REFUND-v4 có hiệu lực (hạn mức tự động 200.000đ → 100.000đ, nên số khoản cần mã duyệt sẽ tăng). Sau 5 ngày làm việc pilot đầu tiên, xem lại nếu "tỉ lệ nhân viên kiểm lại" thật > 10% |
+| PIC ký | Trần Tuấn Anh (2A202603909, Sản phẩm và kinh doanh) · Lê Thanh Tùng (NV-TUNG, PIC trợ lý) · Trần Thị Hạnh (NV-HANH, người đứng tên duyệt) · soát: Vũ Tuấn Đạt (2A202603744) |
 
 **Chỉ ở v2**
-- Quyết định đổi hay giữ so với v1? Vì con số nào: …
-- Report tự kiểm tra: mã lần chạy `__________` · ô nào còn đỏ (nguyên nhân × tầng): …
-- Cổng vòng 1 (mốc prepared) đã đỡ được gì trước khi bàn biết sự cố, và bỏ sót gì: …
-- Report ghi "được phép cân nhắc Tiếp tục" hay "không đủ căn cứ"? Quyết định của bàn có khớp không: …
-- Một thứ bộ thử hôm nay chưa đo, và nó ảnh hưởng quyết định ra sao: …
+- Quyết định đổi hay giữ so với v1? Vì con số nào: **Giữ Thu hẹp.** Gói S8 không làm xấu thêm số nào: after 1,0 · 0đ · 0 · 0, nhân viên kiểm mẫu 10%. Nhưng lý do Thu hẹp của v1 vẫn còn nguyên: kho `?` 10.359đ/ticket > làm tay 10.000đ trên bộ nền. S8 thêm một điều kiện vào phạm vi giữ lại, không đổi kho nào.
+- Report tự kiểm tra: mã lần chạy `R-S8-grade-20261119-164222-af806f` · ô nào còn đỏ (nguyên nhân × tầng): **không còn ô đỏ** trong 6 ô nhìn thấy (ô ẩn chỉ chấm khi nộp). Ở base, đỏ ở quyền hạn × hành động (mã sai), vận hành (kiểm 100%, 36 ca ùn) và kinh doanh (11.225đ/ticket, ROI −2,45).
+- Cổng vòng 1 (mốc prepared) đã đỡ được gì trước khi bàn biết sự cố, và bỏ sót gì: **Đỡ được cả gói nhìn thấy** (`R-S8-prepared-20261119-163453-1f6a32`: 1,0 · 0đ · 0 · 0), nhờ G2 `_bad_approval` (đơn, trạng thái, hạn, hạn mức, người ký), trần 300.000đ/khách, và config đủ 3 điều kiện tin viết từ pre-mortem B6. **Bỏ sót:** chưa so `ticket_id` / `customer_id` của mã, nên mã `valid` của ticket cũ cùng đơn sẽ lọt. Vòng 2 vá ở `4700bde`.
+- Report ghi "được phép cân nhắc Tiếp tục" hay "không đủ căn cứ"? Quyết định của bàn có khớp không: grade `R-S8-grade-20261119-164222-af806f` ghi **"Được phép cân nhắc 'Tiếp tục'"** (không vượt trần, mọi ngưỡng đã ký đạt trên bộ nền và gói S8 ở mốc after). Được phép cân nhắc nhưng không bắt buộc chọn. Bàn chọn Thu hẹp vì `decision_rule` đã ký: kho `?` vượt chi phí làm tay. Kể cả khi report cho phép cân nhắc Tiếp tục, Thu hẹp vẫn khớp tiêu chí và thận trọng hơn.
+- Một thứ bộ thử hôm nay chưa đo, và nó ảnh hưởng quyết định ra sao: **lòng tin của nhân viên lấy lại chậm cỡ nào** sau một lần sai. Mock chuyển từ kiểm 100% về 10% ngay trong ngày khi đủ điều kiện. Ngoài đời chị Hạnh có thể giữ kiểm tay nhiều ngày, làm chi phí mỗi ticket vượt 7.500đ. Nếu tuần đầu pilot tỉ lệ kiểm lại thật vẫn > 10% thì theo điều kiện dừng 6, thu hẹp thêm và họp lại Gate.
 
 **Ba dòng bắt buộc** (chép nguyên ba câu này sang `submission/submission.json`, mục `three_lines`)
-1. Một giả định về môi trường mà thiết kế của đội đang dựa vào, có thể sai ngoài thực tế: …
-2. Gate của đội chỉ GIẢM khả năng hay thực sự NGĂN được tác hại? Vì sao: …
-3. Vì data là mock, cần đo lại gì trong pilot thật trước Bước đánh giá 2: …
+1. Một giả định về môi trường mà thiết kế của đội đang dựa vào, có thể sai ngoài thực tế: Bảng phê duyệt luôn đúng và cập nhật kịp: chị Hạnh thu hồi hay mã hết hạn thì trạng thái đổi ngay, mỗi mã gắn đúng một ticket, một đơn, một khách. Ngoài đời người duyệt hay duyệt qua chat rồi nhập sau, thu hồi muộn (mã A-2802 hết hạn 6 ngày vẫn để valid).
+2. Gate của đội chỉ GIẢM khả năng hay thực sự NGĂN được tác hại? Vì sao: Cổng G2 NGĂN việc chi tiền dưới tên chị Hạnh bằng mã sai ticket, sai đơn, sai khách, hết hạn, đã thu hồi hay thiếu hạn mức, vì nó đối chiếu bảng phê duyệt trước khi tiền đi. Nhưng nó chỉ GIẢM khả năng mất lòng tin: bảng sai thì cổng sai theo, và việc nhân viên thôi kiểm tay phụ thuộc vào con người (ghi chú, kiểm mẫu 10%), không do code bảo đảm.
+3. Vì data là mock, cần đo lại gì trong pilot thật trước Bước đánh giá 2: Tỉ lệ nhân viên CSKH thật sự kiểm lại quyết định tự động mỗi ngày (mục tiêu ≤ 10%) và mấy ngày thì về được mức đó sau một lần sai; thời gian kiểm một ca có ghi chú (mock giả định 0,4 ca); độ trễ từ lúc chị Hạnh thu hồi mã tới lúc bảng đổi trạng thái; số khoản hoàn dùng mã không hợp lệ qua đối soát (phải bằng 0).

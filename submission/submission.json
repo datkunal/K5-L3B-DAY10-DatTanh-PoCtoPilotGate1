@@ -1,12 +1,12 @@
 {
   "team": "K5-L3B-DAY10-DatTanh-PoCtoPilotGate1",
   "members": ["VuTuanDat-2A202603744", "TranTuanAnh-2A202603909"],
-  "incident": "",
+  "incident": "S8",
   "decision_v1": "Thu hẹp",
-  "decision_v2": "",
+  "decision_v2": "Thu hẹp",
   "three_lines": {
-    "environment_assumption": "",
-    "reduce_or_prevent": "",
-    "measure_in_pilot": ""
+    "environment_assumption": "Bảng phê duyệt luôn đúng và cập nhật kịp: chị Hạnh thu hồi hay mã hết hạn thì trạng thái đổi ngay, mỗi mã gắn đúng một ticket, một đơn, một khách. Ngoài đời người duyệt hay duyệt qua chat rồi nhập sau, thu hồi muộn (mã A-2802 hết hạn 6 ngày vẫn để valid).",
+    "reduce_or_prevent": "Cổng G2 NGĂN việc chi tiền dưới tên chị Hạnh bằng mã sai ticket, sai đơn, sai khách, hết hạn, đã thu hồi hay thiếu hạn mức, vì nó đối chiếu bảng phê duyệt trước khi tiền đi. Nhưng nó chỉ GIẢM khả năng mất lòng tin: bảng sai thì cổng sai theo, và việc nhân viên thôi kiểm tay phụ thuộc vào con người (ghi chú, kiểm mẫu 10%), không do code bảo đảm.",
+    "measure_in_pilot": "Tỉ lệ nhân viên CSKH thật sự kiểm lại quyết định tự động mỗi ngày (mục tiêu ≤ 10%) và mấy ngày thì về được mức đó sau một lần sai; thời gian kiểm một ca có ghi chú (mock giả định 0,4 ca); độ trễ từ lúc chị Hạnh thu hồi mã tới lúc bảng đổi trạng thái; số khoản hoàn dùng mã không hợp lệ qua đối soát (phải bằng 0)."
   }
 }
