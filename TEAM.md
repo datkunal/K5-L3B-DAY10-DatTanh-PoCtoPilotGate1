@@ -24,23 +24,28 @@ Ghi `members` trong `submission/submission.json` theo dạng `"HoVaTen-MSSV"`, k
 
 Mỗi thành viên tự viết một mục bên dưới (chép mẫu, đổi tiêu đề thành họ tên không dấu và MSSV, ví dụ `## NguyenVanAn-20241234`).
 
-## HoVaTen-MSSV
+## VuTuanDat-2A202603744
 
 ### Phần việc phụ trách
 
-Vai trong bàn; câu nào của đề, mục nào của phiếu A/B/C, file nào (`lab10/guards.py`, `config/operating_gates.json`, …).
+Vai **Kỹ sư cổng**, trưởng nhóm, máy duy nhất chạy `lab10.eval` / `trace` / `grade` / `checkpoint` / `check_submission`. Phiếu A câu 1.3; Phiếu B mục B0, B1, B2, B7.1, B7.2, B7.3 (và hash, mã lần chạy ở B8); Phiếu C mục C0, C2, dòng code ở C7, C8, C9. File: `lab10/guards.py`, `lab10/monitors.py`; chốt vòng 1 (`lab10.checkpoint`), gom bài nộp (`submission/`).
 
 ### Đóng góp cụ thể
 
-...
+- **Cổng vòng 1:** G1 `pre_guard` ghim chính sách theo ngày `as_of` (REFUND-v3, không theo `index_active`); G2 `_gate_refund` tính quyền lợi từ tracking DB (không tin số ngày khách khai), chặn hoàn lặp, chặn payer MERCHANT, kiểm phê duyệt, trần 2 lỗi/hãng/ngày và 300.000đ/khách/ngày, nhánh LLM lỗi (fail-open) tính lại từ DB thay vì chuyển người hàng loạt; G3 `_gate_fault` ghi lỗi đúng kiện và độ trễ theo tracking, chặn khi nguyên nhân không phải lỗi hãng; G4 `_gate_notify` chỉ gửi hãng các trường chính sách cho phép (bỏ `customer_note`, `recipient_contact`).
+- **Monitor:** `model_override_rate`, `fault_delay_mismatch_rate` (vòng 1); `approval_unverified_rate`, `approval_rejected_rate` (vòng 2).
+- **Vòng 2 (thẻ S8):** G2 coi phê duyệt hợp lệ chỉ khi đúng ticket, đúng đơn, đúng khách, `valid`, còn hạn, đủ hạn mức, đúng người đứng tên; agent bốc nhầm mã mà ticket có mã đúng thì đổi sang mã đúng; log `approval_verified` / `approval_rejected`. Thử biến thể "mã còn hiệu lực, cùng đơn, của ticket cũ": vòng 1 cho chi 230.000đ, vòng 2 chuyển người.
+- Phát hiện và sửa lệch hash tiêu chí do `core.autocrlf` trên Windows trước khi chạy bộ nền (ghi chú ở B0).
 
 ### Bằng chứng
 
-Mã commit, mã lần chạy (`runs/<mã>`), dòng trong phiếu.
+Commit `e464a96` (cổng vòng 1), `8a8b32f`, `85a0717`, `160cb60` (Phiếu B, monitor, fail-open), `c78f069` (chốt vòng 1, hash `d70e9bc2`), `e17c260` (nhận thẻ S8), `4700bde` (cổng + monitor vòng 2), `7b6b870`, `f67bc5b`, `73fda7e` (Phiếu C), `a6fd9e4` (gom bài, ĐỦ THÀNH PHẦN). Lần chạy: `R-base-before-20261119-150157-d40784`, `R-base-after-20261119-150311-712f50`, `R-base-prepared-20261119-151243-1f6a32`, `R-S8-grade-20261119-164222-af806f` (ba mốc `R-S8-{before,prepared,after}-20261119-164224-af806f`), `R-base-after-20261119-164222-af806f`.
+
+Có dùng trợ lý AI (Claude Code) để đọc code, viết và chạy thử cổng, soạn nháp phần phiếu; mọi số trong phiếu lấy từ lần chạy thật trên máy Đạt.
 
 ### Exit ticket
 
-Một điều học được, một điều còn chưa chắc.
+*(bản nháp, Đạt tự sửa lời)* Học được: cổng tốt nằm ở lệnh ghi và đọc dữ liệu gốc (tracking, bảng phê duyệt), không đọc model hay lời khách, nên nó NGĂN được nhánh lỗi chứ không chỉ giảm; và một chỉ số theo dõi chỉ có ích khi nó khác nhau giữa ngày bình thường và ngày có sự cố. Còn chưa chắc: cổng tin hoàn toàn vào bảng `approvals` và tracking; nếu chính bảng sai từ nguồn (thu hồi bằng lời chưa cập nhật) thì cổng vẫn cho chi, và bộ thử hôm nay không đo được trường hợp đó.
 
 ## TranTuanAnh-2A202603909
 
