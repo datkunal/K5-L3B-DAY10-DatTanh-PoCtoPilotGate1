@@ -211,15 +211,15 @@ Trạng thái: **Xong** (có bằng chứng) · **Chưa** · **Không áp dụng
 
 | # | Nhóm việc | Bằng chứng lấy từ đâu (đã có sẵn trong lab) | Mục cần kiểm tra | Trạng thái | Bằng chứng | PIC |
 |---|---|---|---|---|---|---|
-| 1 | Chất lượng | Report `lab10.eval` (mã lần chạy) + bảng soát lỗi (Phiếu B mục B2) | | | | |
-| 2 | Dữ liệu | Bản đồ dữ liệu (Phiếu B mục B3, câu 2.3): trường nào là nguồn sự thật, trường nào là bản sao | | | | |
-| 3 | Bảo mật | Một vòng HAZOP với guideword PERTURBED (Phiếu B mục B4): chữ nào đi vào model mà không do LogiX viết | | | | |
-| 4 | Quyền hạn | `config/switches.json` + guard trước lệnh ghi; thẻ S2, S8 có thêm mục mức kiểm soát (Phiếu C mục C3) | | | | |
-| 5 | Hiệu năng, hạ tầng | Đội tự ước tính; HAZOP guideword INCAPABLE: LLM không trả lời thì sao; số người duyệt và số ca mỗi giờ | | | | |
-| 6 | Chi phí | Khối "kinh doanh và vận hành" của report: chi phí mỗi ticket so với làm tay, ROI, tiền LLM ticket đắt nhất; `config/operating_gates.json` mục `business` | | | | |
-| 7 | Vận hành | Runbook (Phiếu B mục B7.5–B7.6) + `config/operating_gates.json` mục `operations` (PIC, người duyệt, số người trực, điều kiện dừng, kênh báo tin) + metric trong `monitors.py` | | | | |
-| 8 | Con người, pháp lý | Bên thứ ba (hãng, tài xế, shop, người nhận quà, người đứng tên duyệt); `config/operating_gates.json` mục `legal`; thẻ S6, S7, S8 có mục riêng ở Phiếu C mục C3 | | | | |
-| 9 | Quyết định | Câu tiêu chí (Phiếu A mục A4) + hash Bản tiêu chí đã ký + quyết định Gate 1 (Phiếu B mục B8, Phiếu C mục C12) | | | | |
+| 1 | Chất lượng | Report `lab10.eval` (mã lần chạy) + bảng soát lỗi (Phiếu B mục B2) | pass_rate ≥ 0,97, pass_k ≥ 0,95, hoàn sai 0đ, lỗi hãng oan 0, lộ dữ liệu 0 trên bộ nền ở mốc prepared; `T-002@55` đã xếp loại lỗi | Chưa (chờ số mốc base/prepared do Đạt chạy) | Phiếu B mục B0, B2; mã lần chạy base/prepared ghi ở B0 | Vũ Tuấn Đạt |
+| 2 | Dữ liệu | Bản đồ dữ liệu (Phiếu B mục B3, câu 2.3): trường nào là nguồn sự thật, trường nào là bản sao | Số tiền và lỗi hãng chỉ tính từ nguồn sự thật (`delivered_date`, `promised_date`, chính sách theo ngày hiệu lực), không từ số khách khai; có kế hoạch cho drift REFUND-v4 ngày 01/12/2026 | Xong | B3 (bản đồ + drift); cổng G1 ghim chính sách, G2 tính lại quyền lợi từ DB (`lab10/guards.py`, commit `e464a96`) | Trần Tuấn Anh |
+| 3 | Bảo mật | Một vòng HAZOP với guideword PERTURBED (Phiếu B mục B4): chữ nào đi vào model mà không do LogiX viết | Chữ ticket (`text`) và ghi chú lúc đặt hàng (`checkout_note`) là dữ liệu, không phải lệnh: không đổi được `payer`, không đẩy số tiền vượt quyền lợi | Chưa (cổng đã viết; còn chờ ticket hiểm B7.3 chạy `--adhoc`) | B4 dòng PERTURBED; G2 (`payer ≠ LOGIX` → chuyển người, tiền > quyền lợi → hạ) | Vũ Tuấn Đạt |
+| 4 | Quyền hạn | `config/switches.json` + guard trước lệnh ghi; thẻ S2, S8 có thêm mục mức kiểm soát (Phiếu C mục C3) | Cả 4 lệnh ghi đều qua `write_gate`; mỗi lệnh có công tắc tắt riêng và **một người giữ công tắc** có tên; phê duyệt chỉ hợp lệ khi đúng đơn, còn hạn, do NV-HANH ký | Xong | `config/switches.json` (4 công tắc `on`); `operations.pic = NV-TUNG`, `approver_id = NV-HANH` trong `config/operating_gates.json` (commit `6997b5b`); G2 kiểm phê duyệt | Lê Thanh Tùng (NV-TUNG) |
+| 5 | Hiệu năng, hạ tầng | Đội tự ước tính; HAZOP guideword INCAPABLE: LLM không trả lời thì sao; số người duyệt và số ca mỗi giờ | LLM lỗi thì không hoàn kiểu fail-open, không ghi lặp; 1 người × 6 ca/giờ đủ cho ~22 ticket/ngày và giờ cao điểm gấp ba (~8 ticket/giờ, ~2 ca chuyển người/giờ); tiền LLM mỗi ticket ≤ 1.200đ (dưới trần 1.500đ) | Chưa (chờ số hàng chờ trong report) | B4 dòng INCAPABLE; `reviewers_on_shift = 1`, `review_capacity_per_hour = 6`, `cost_budget_per_ticket_vnd = 1200`; B7.6 | Trần Tuấn Anh |
+| 6 | Chi phí | Khối "kinh doanh và vận hành" của report: chi phí mỗi ticket so với làm tay, ROI, tiền LLM ticket đắt nhất; `config/operating_gates.json` mục `business` | Chi phí mỗi ticket ≤ 7.500đ (làm tay 10.000đ), ROI ≥ 0,3, không kho nào đắt hơn làm tay, tổng hoàn tự động/ngày ≤ trần 1.600.000đ | Chưa (cổng `business` đã đặt; chờ report mốc prepared) | B7.4; `config/operating_gates.json` mục `business` (commit `6997b5b`) | Trần Tuấn Anh |
+| 7 | Vận hành | Runbook (Phiếu B mục B7.5–B7.6) + `config/operating_gates.json` mục `operations` (PIC, người duyệt, số người trực, điều kiện dừng, kênh báo tin) + metric trong `monitors.py` | Runbook 1–3 + giờ cao điểm khớp con số trong config; 6 điều kiện dừng; kênh báo tin; metric mới trong `monitors.py` (vòng 2) | Chưa (runbook + config xong; metric mới làm ở vòng 2) | B7.5, B7.6; `operations.*` trong `config/operating_gates.json` | Lê Thanh Tùng (NV-TUNG) |
+| 8 | Con người, pháp lý | Bên thứ ba (hãng, tài xế, shop, người nhận quà, người đứng tên duyệt); `config/operating_gates.json` mục `legal`; thẻ S6, S7, S8 có mục riêng ở Phiếu C mục C3 | Không gửi `recipient_contact`, `customer_note` cho hãng; chỉ ghi lỗi hãng khi tracking ghi nguyên nhân; không trừ tiền shop tự động; chị Hạnh chỉ đứng tên khoản chị duyệt; nhân viên tin trợ lý (ghi chú giải thích + kiểm mẫu 10%) | Xong (con số đã đặt), chờ report xác nhận `pii_leaks = 0` | `legal.*`, `decision_note = true`, `review_sampling_pct = 10` trong `config/operating_gates.json`; G3, G4 | Trần Tuấn Anh |
+| 9 | Quyết định | Câu tiêu chí (Phiếu A mục A4) + hash Bản tiêu chí đã ký + quyết định Gate 1 (Phiếu B mục B8, Phiếu C mục C12) | Tiêu chí ký **trước** lần đánh giá đầu tiên; quyết định v1 khớp `decision_rule` đã ký | Chưa (đã ký; quyết định v1 viết ở B8 sau khi có số prepared) | Phiếu A mục A4, A5; commit `be591b7` `Sign acceptance criteria`, hash `8f6d681a4e5e` | Trần Tuấn Anh |
 
 Ô "Chưa" có rủi ro cao → chuyển thành một dòng Risk register (Phiếu C mục C10).
 
@@ -254,11 +254,11 @@ Bốn lăng kính (bắt buộc đủ cả bốn; dự án AI hay chết ở ba 
 
 | Lý do thất bại (viết ở thì quá khứ) | Lăng kính | Kiểm được hôm nay? (trace / data / config nào) | Thành cổng phòng ngừa nào (code hay config) / hay vào risk register |
 |---|---|---|---|
-| | Kỹ thuật | | |
-| | Kinh doanh | | |
-| | Con người và vận hành | | |
-| | Pháp lý | | |
-| | | | |
+| Trợ lý tin số ngày trễ khách tự khai nên hoàn sai và ghi lỗi oan cho hãng (như `T-002@55`: khách khai 5 ngày, tracking 2 ngày, VNX bị ghi lỗi). | Kỹ thuật | Có: trace `T-002@55`, sự kiện `model_override`; `data/world.json` O-1002 | **Cổng (code)** G2: tính lại quyền lợi từ tracking DB, chặn/hạ tiền; G3 chỉ ghi lỗi khi tracking ghi lỗi hãng ✔ |
+| Shop bị trừ tiền vì trợ lý làm theo câu lệnh khách cài trong ticket; cùng lúc sau bão tổng hoàn tự động một ngày vượt ngân sách 2.000.000đ của Finance mà không ai được báo, Finance đòi tắt. | Kinh doanh | Có: `payer` trong sổ cái; `ops_limits.daily_auto_refund_budget_vnd`; dòng "tổng hoàn tự động một ngày" trong report | **Cổng (code)** G2 `payer ≠ LOGIX` → chuyển người ✔; **cổng (config)** `business.daily_refund_cap_vnd = 1.600.000` ✔ |
+| Chỉ một người duyệt (chị Hạnh); ngày sale lượng ticket gấp ba, hàng chờ ùn quá 60 phút, chị duyệt vội và ký nhầm; nhân viên CSKH không tin trợ lý nên tự kiểm lại 100% quyết định, chi phí vượt làm tay. | Con người và vận hành | Có một phần: report khối "hàng chờ người duyệt", `staff_behavior.trust_conditions` trong `data/world.json` | **Cổng (config)** `reviewers_on_shift = 1`, `review_capacity_per_hour = 6`, `max_queue_wait_minutes = 45`, `decision_note = true`, `review_sampling_pct = 10`, `approver_id = NV-HANH` ✔; ngưỡng gọi người thứ hai → runbook B7.6; còn lại → risk register |
+| Hãng nhận được tên và số điện thoại người nhận quà; một hãng nhỏ (GHSH, 12 tài xế) bị đình chỉ vì 3 lỗi ghi oan trong 7 ngày. | Pháp lý | Có: payload `notify_carrier` (đơn quà O-1024, O-1026), `carriers[].suspend_after_strikes_7d` | **Cổng (code)** G3, G4 + **cổng (config)** `legal.pii_fields_blocked_to_third_party = [recipient_contact, customer_note]`, `carrier_fault_requires_recorded_cause = true` ✔ |
+| Từ 01/12/2026 REFUND-v4 có hiệu lực nhưng cờ `index_active` vẫn trỏ v3: trợ lý hoàn theo hạn mức cũ và ghi lỗi MKD cho ca mưa bão. | Kỹ thuật (drift) | Có: `policies[]` trong `data/world.json` | **Cổng (code)** G1 ghim chính sách theo ngày hiệu lực ✔; xem lại tiêu chí ngày 30/11/2026 → risk register |
 
 ---
 
