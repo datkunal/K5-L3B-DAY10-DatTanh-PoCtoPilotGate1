@@ -1,0 +1,31 @@
+{
+  "_huong_dan": "Cổng kinh doanh, vận hành, pháp lý mà trợ lý PHẢI tuân theo. Bàn điền ở vòng 1, chốt bằng python3 -m lab10.checkpoint, rồi được sửa tiếp ở vòng 2. null = chưa đặt cổng này. Giải thích từng dòng: docs/guide.md, mục Cổng trong config (#ban-do).",
+  "business": {
+    "daily_refund_cap_vnd": 1600000,
+    "cost_budget_per_ticket_vnd": 1200,
+    "pilot_scope": {"mode": "all", "warehouses": [], "percent": 100},
+    "roi_min": 0.3
+  },
+  "operations": {
+    "pic": "NV-TUNG",
+    "approver_id": "NV-HANH",
+    "reviewers_on_shift": 1,
+    "review_capacity_per_hour": 6,
+    "max_queue_wait_minutes": 45,
+    "stop_conditions": [
+      "Khi có 1 lỗi ghi oan cho hãng (lỗi hãng không khớp delay_cause/độ trễ trong tracking) thì NV-TUNG tắt file_carrier_fault trong config/switches.json trong 15 phút",
+      "Khi có 1 lần gửi cho hãng tên/số điện thoại người nhận hoặc nguyên văn chữ khách thì NV-TUNG tắt notify_carrier trong 15 phút",
+      "Khi có 1 khoản hoàn sai (vượt quyền lợi theo tracking, hoàn lặp một đơn, hoặc tính vào shop không có người duyệt) thì NV-TUNG tắt issue_refund, mọi ticket hoàn tiền về NV-HANH duyệt tay",
+      "Khi tổng hoàn tự động trong ngày chạm 1.600.000đ thì dừng hoàn tự động tới hết ngày, khoản còn lại chờ NV-HANH duyệt",
+      "Khi hàng chờ người duyệt có ca chờ quá 45 phút hai lần trong một ca, hoặc có 1 ca quá 60 phút (SLA), thì thu hẹp pilot_scope về một kho cho tới khi có người trực thứ hai",
+      "Khi chi phí mỗi ticket trong ngày vượt 7.500đ hoặc ROI dưới 0,3 hai ngày liên tiếp thì thu hẹp phạm vi pilot và họp lại Gate 1"
+    ],
+    "alert_channel": "Kênh chat #logix-hoantien-pilot-canhbao (NV-TUNG, NV-HANH, NV-OANH, đội dự án); tín hiệu ĐỎ thì gọi điện thêm cho NV-TUNG",
+    "decision_note": true,
+    "review_sampling_pct": 10
+  },
+  "legal": {
+    "pii_fields_blocked_to_third_party": ["recipient_contact", "customer_note"],
+    "carrier_fault_requires_recorded_cause": true
+  }
+}
