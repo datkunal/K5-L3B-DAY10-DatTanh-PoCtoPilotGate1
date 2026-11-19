@@ -39,7 +39,7 @@ from .tools import Verdict
 #
 #   G1  pre_guard                 ghim chính sách theo NGÀY HIỆU LỰC (không tin cờ index_active)
 #   G2  write_gate issue_refund   đối chiếu quyền lợi tính từ DB: chặn hoàn khi không đủ điều kiện, hạ số tiền thừa,
-#                                 không hoàn lần hai cho cùng đơn, không hoàn khi chưa kiểm được chính sách (fail-open),
+#                                 không hoàn lần hai cho cùng đơn, LLM lỗi (fail-open) thì tính lại quyền lợi từ DB,
 #                                 shop trả tiền / phê duyệt không hợp lệ / vượt trần mỗi khách / hãng đã đủ lỗi trong
 #                                 ngày → chuyển người duyệt TRƯỚC khi có tiền đi
 #   G3  write_gate file_carrier_fault   chỉ ghi lỗi khi tracking ghi nguyên nhân thuộc lỗi hãng, đúng kiện bị trễ
@@ -97,9 +97,6 @@ def write_gate(ctx, action):
 
 # ---- G2 ----------------------------------------------------------------------------------------------------------
 def _gate_refund(ctx, action):
-    if action.get("basis") == "fail_open":
-        return Verdict.escalate("chưa kiểm được chính sách (LLM lỗi): không hoàn theo kiểu fail-open")
-
     f = _facts(ctx, action.get("order_id"))
     if f is None:
         return Verdict.escalate("không đối chiếu được đơn hoặc chính sách")
@@ -133,6 +130,21 @@ def _gate_refund(ctx, action):
         if len(ctx.tools.fault_rows(carrier_id=cid)) >= strikes_cap:
             return Verdict.escalate(f"hãng {cid} đã có {strikes_cap} lỗi tự động trong ngày: cần người duyệt")
 
+    # LLM lỗi ở bước kiểm chính sách, agent định hoàn theo kiểu fail-open (phí ship + ghi lỗi hãng, không tính gì).
+    # Cổng thay bước kiểm đó bằng phép tính tất định từ DB: hoàn ĐÚNG quyền lợi; vượt hạn mức tự động mà chưa có
+    # phê duyệt thì chuyển người. Không chuyển người hàng loạt, để giờ cao điểm hàng chờ không ùn vì nhà cung cấp LLM.
+    if action.get("basis") == "fail_open":
+        ctx.log("fail_open_recomputed", asked=amount, entitled=f["entitled"])
+        amount = f["entitled"]
+        if amount > f["policy"]["auto_limit_vnd"] and not action.get("approval_id"):
+            # Vượt hạn mức tự động: chỉ hoàn khi ĐƠN NÀY có phê duyệt hợp lệ (cùng các luật như nhánh phê duyệt ở trên).
+            ok = [a for a in ctx.tools.lookup_approvals(order_id=action.get("order_id"))
+                  if not _bad_approval(ctx, {**action, "approval_id": a["approval_id"]}, amount)]
+            if not ok:
+                return Verdict.escalate("LLM lỗi, quyền lợi theo DB vượt hạn mức tự động, chưa có phê duyệt hợp lệ")
+            return Verdict.modify(f"LLM lỗi: hoàn theo DB ({amount}đ) với phê duyệt {ok[0]['approval_id']}",
+                                  amount_vnd=amount, approval_id=ok[0]["approval_id"])
+
     pay = min(amount, f["entitled"])
 
     # Trần hoàn tự động cho một khách mỗi ngày (thống nhất với Ops/Finance).
@@ -148,6 +160,8 @@ def _gate_refund(ctx, action):
     if amount > f["entitled"]:
         ctx.log("db_mismatch", asked=amount, entitled=f["entitled"], db_delay=f["delay"], cause=f["cause"])
         return Verdict.modify(f"hạ về quyền lợi theo DB ({f['entitled']}đ)", amount_vnd=f["entitled"])
+    if amount != int(action.get("amount_vnd") or 0):          # chỉ xảy ra ở nhánh fail-open: hoàn đúng quyền lợi
+        return Verdict.modify(f"LLM lỗi: hoàn theo quyền lợi tính từ DB ({amount}đ)", amount_vnd=amount)
     return Verdict.allow()
 
 
