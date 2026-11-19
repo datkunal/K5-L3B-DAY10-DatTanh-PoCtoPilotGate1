@@ -1,6 +1,6 @@
 # Phiếu C · Sự cố và quyết định v2 · Khối 3 (phút 125–200)
 
-**Bàn:** ______ · **Thẻ đã bốc:** ___ *(để trống tới phút 125; bốc số xong thì ghi đúng số đó, ví dụ `S3`. Lab Coach đối chiếu với sổ; lệnh tự kiểm tra in dòng này trong report.)*
+**Bàn:** K5-L3B-DAY10-DatTanh-PoCtoPilotGate1 (Vũ Tuấn Đạt: C0, C2, C8, C9, dòng code ở C7 · Trần Tuấn Anh: C1 pre-mortem, C3, C4, C5, C6, dòng config ở C7, C10, C11, C12) · **Thẻ đã bốc:** ___ *(để trống tới phút 125; bốc số xong thì ghi đúng số đó, ví dụ `S3`. Lab Coach đối chiếu với sổ; lệnh tự kiểm tra in dòng này trong report.)*
 
 Mở `incidents/Sx/card.md` của đúng số đã bốc. Các bước trên thẻ trỏ về đúng mục trong phiếu này. Mục C3 chỉ điền phần ứng với
 số thẻ của bàn; các phần khác để trống.
@@ -369,7 +369,12 @@ Vẽ lại cây ở C6. Ở mỗi nhánh đã xử lý, thêm một nút `VÀ [g
 
 | Rủi ro | Khả năng | Tác động | Người phụ trách (PIC, một người) | Dấu hiệu (metric nào, ngưỡng nào) | Xử lý | Ảnh hưởng bước đánh giá | Nhóm chức năng (GOVERN / MAP / MEASURE / MANAGE) |
 |---|---|---|---|---|---|---|---|
-| | | | | | | | |
+| **Sau sự cố (thẻ ___):** *(điền ở phút 180–185 từ fault tree C9, nhánh còn hở)* | | | | | | | |
+| Khách bị **hoàn thiếu** mà không chỉ số bắt buộc nào thấy: cổng G2 hạ tiền / từ chối theo tracking, nếu tracking thiếu hoặc sai (`delivered_date` quét sót, `IN_TRANSIT`) thì khách thiệt mà không ai báo (B6 lăng kính Kỹ thuật, bản đồ dữ liệu B3) | Vừa | Vừa (khách, uy tín CSKH) | Trần Thị Hạnh (NV-HANH) | Report `under_refund_vnd` > 0đ trên bất kỳ bộ thử nào; pilot thật: số khiếu nại "bị từ chối oan" mỗi tuần ≥ 3 | Đội dự án thêm `under_refund_vnd` vào bộ ngưỡng xem lại ngày 30/11/2026; khi > 0 thì NV-HANH kiểm tay toàn bộ ca từ chối của ngày đó | Không đổi được "Tiếp tục" thành đạt nếu > 0 ở gói sự cố: bàn chọn Thu hẹp nhóm ticket gây hoàn thiếu | MEASURE |
+| **REFUND-v4 có hiệu lực 01/12/2026**: hạn mức tự động 200.000đ → 100.000đ, bão không còn ghi lỗi hãng; bộ nền chỉ đo ngày 16/11 (v3) nên chưa có bằng chứng cổng G1 chạy đúng với v4 | Cao (chắc chắn xảy ra) | Cao (hoàn sai mức, ghi lỗi oan MKD/DNB mùa bão) | Lê Thanh Tùng (NV-TUNG) | Report `escalation_rate` nhảy > 0,25 sau 01/12; monitor `fault_delay_mismatch_rate` > 0; `wrongful_carrier_faults` > 0 | Trước 01/12: chạy lại bộ nền với ngày giả lập ≥ 01/12; nếu chưa có bằng chứng thì tắt `file_carrier_fault` từ 01/12 tới khi có | Ngày quyết định lại 2026-11-30 (B8); thiếu bằng chứng thì không mở rộng phạm vi | GOVERN |
+| **Nhân viên CSKH không tin trợ lý** nên tự kiểm lại 100% quyết định tự động: chi phí mỗi ticket vượt làm tay, hàng chờ của một người duyệt ùn (B6 lăng kính Con người và vận hành) | Vừa | Cao (ROI âm, vỡ SLA 60 phút) | Trần Thị Hạnh (NV-HANH) | Report dòng `tỉ lệ chuyển người duyệt` ("nhân viên kiểm lại …% quyết định tự động") > 10%; `chi phí mỗi ticket` > 7.500đ; ROI < 0,3 | Giữ `decision_note = true`, `review_sampling_pct = 10`, `approver_id = NV-HANH` (đủ ba điều kiện tin trong `staff_behavior`); không có khoản hoàn nào dùng phê duyệt không hợp lệ (G2) | Vượt 7.500đ/ticket hoặc ROI < 0,3 → Thu hẹp theo `decision_rule` đã ký | MANAGE |
+| **Một người duyệt duy nhất** ngày sale / sau bão: ca chuyển người dồn cục, ca cuối chờ > 60 phút | Vừa | Vừa (khách chờ, chị Hạnh duyệt vội) | Lê Thanh Tùng (NV-TUNG) | Report `hàng chờ người duyệt`: chờ lâu nhất > 30 phút (vàng), > 45 phút (đỏ, `max_queue_wait_minutes`); `queue_stuck` ≥ 1 | Runbook B7.6: ≥ 4 ca chờ hoặc ≥ 30 phút → gọi người thứ hai (`reviewers_on_shift = 2`, +30.000đ/ca); còn ùn → thu hẹp `pilot_scope` | `queue_stuck` > 0 vi phạm ngưỡng đã ký → không Tiếp tục | MANAGE |
+| **Điểm phát nhập sai `delay_cause`** (ghi `CARRIER` cho ca khách vắng nhà): mọi cổng đều tin tracking nên vẫn ghi lỗi oan cho hãng | Thấp | Cao (hãng nhỏ GHSH/DNB bị đình chỉ sau 3 lỗi/7 ngày) | Phạm Kiều Oanh (NV-OANH) | Số khiếu nại "ghi lỗi oan" hãng gửi về mỗi tuần ≥ 1; monitor `model_override_rate` cao bất thường ở một hãng | Đối soát tuần với hãng; lỗi tự động thứ 3 của một hãng trong ngày đã chuyển người (G2) | Có khiếu nại xác nhận → tắt `file_carrier_fault` cho hãng đó, xem lại Gate | MAP |
 
 Quy tắc: **mỗi dòng phải đổi được một quyết định.** Cột "Dấu hiệu" phải là một metric có trong `monitors.py` hoặc trong report.
 
