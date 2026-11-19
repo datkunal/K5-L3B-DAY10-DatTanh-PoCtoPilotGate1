@@ -1,8 +1,8 @@
 {
-  "team": "",
-  "members": [],
+  "team": "K5-L3B-DAY10-DatTanh-PoCtoPilotGate1",
+  "members": ["VuTuanDat-2A202603744", "TranTuanAnh-2A202603909"],
   "incident": "",
-  "decision_v1": "",
+  "decision_v1": "Thu hẹp",
   "decision_v2": "",
   "three_lines": {
     "environment_assumption": "",
